@@ -4,6 +4,9 @@ on:
     branches: [ beacon-poc-build ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,31 +19,36 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Show Android SDK env
-        run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
-          ls "$ANDROID_HOME/cmdline-tools" || true
-
-      - name: Accept licenses & ensure SDK packages
-        run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "platform-tools" "platforms;android-34" "build-tools;34.0.0" || true
+      - name: Accept Android SDK licenses
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses || true
 
       - name: Grant gradlew execute permission
         run: chmod +x ./gradlew
 
       - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon --stacktrace
+        id: build
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
 
-      - name: List outputs
-        if: always()
-        run: find app/build/outputs -name "*.apk" -print || true
+      - name: Publish APK to GitHub Release
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete beacon-poc -y --cleanup-tag 2>/dev/null || true
+          gh release create beacon-poc app/build/outputs/apk/debug/*.apk \
+            --target beacon-poc-build \
+            --title "BFL Beacon POC — Debug APK" \
+            --notes "Debug APK (demo mode). Sideload on an Android phone to test. Enable 'Install unknown apps' for your browser/file manager first."
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: BFL-Beacon-Consent-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: error
+      - name: Commit build error log on failure
+        if: failure()
+        run: |
+          mkdir -p ci-logs
+          tail -c 80000 build.log > ci-logs/build-error.log || echo "no build.log" > ci-logs/build-error.log
+          git config user.email "ci@local"
+          git config user.name "ci-bot"
+          git add ci-logs/build-error.log
+          git commit -m "CI: build error log [skip ci]" || true
+          git push origin HEAD:beacon-poc-build || true
