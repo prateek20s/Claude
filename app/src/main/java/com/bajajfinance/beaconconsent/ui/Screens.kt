@@ -195,6 +195,7 @@ private fun SectionTitle(t: String) {
 @Composable
 fun PermissionScreen(
     btEnabled: Boolean,
+    error: String? = null,
     onRequest: () -> Unit,
     onEnableBluetooth: () -> Unit,
     onBack: () -> Unit
@@ -248,6 +249,11 @@ fun PermissionScreen(
                     fontSize = 15.sp, textAlign = TextAlign.Center, lineHeight = 22.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 )
+            }
+            if (error != null) {
+                Spacer(Modifier.height(16.dp))
+                Text(error, color = MaterialTheme.colorScheme.error, fontSize = 14.sp,
+                    textAlign = TextAlign.Center, lineHeight = 20.sp)
             }
             Spacer(Modifier.height(16.dp))
         }

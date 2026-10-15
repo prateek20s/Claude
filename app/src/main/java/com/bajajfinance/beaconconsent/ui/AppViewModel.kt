@@ -92,10 +92,19 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
         return on
     }
 
+    /** Fallback when the system enable dialog can't be shown (rare). Guide to settings. */
+    fun onEnableBluetoothFailed() = _ui.update {
+        it.copy(
+            btEnabled = false,
+            error = "Couldn't open the Bluetooth switch automatically. Please turn on " +
+                "Bluetooth from your phone's settings or quick-settings panel, then come back."
+        )
+    }
+
     fun loadPeripheralsAndContinue() {
         refreshBtStatus()
         val list = reader.readPairedPeripherals()
-        _ui.update { it.copy(peripherals = list, btEnabled = true, screen = Screen.DEVICES) }
+        _ui.update { it.copy(peripherals = list, btEnabled = true, error = null, screen = Screen.DEVICES) }
     }
 
     fun toggleDevice(mac: String) = _ui.update { s ->

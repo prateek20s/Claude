@@ -3,6 +3,7 @@ package com.bajajfinance.beaconconsent
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,9 +19,20 @@ class MainActivity : ComponentActivity() {
 
     private val vm: AppViewModel by viewModels()
 
+    // When the enable-Bluetooth request has to pause to collect the BLUETOOTH_CONNECT
+    // permission first, we flip this on so the permission callback can resume it.
+    private var pendingEnableAfterPermission = false
+
     private val permLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             vm.onPermissionResult(granted)
+            if (granted && pendingEnableAfterPermission) {
+                pendingEnableAfterPermission = false
+                // Permission is now held, so it's safe to show the system enable dialog.
+                if (!vm.ui.value.btEnabled) launchEnableBtIntent()
+            } else {
+                pendingEnableAfterPermission = false
+            }
         }
 
     // System "Turn on Bluetooth?" dialog. On return we re-check actual BT state.
@@ -54,6 +66,7 @@ class MainActivity : ComponentActivity() {
 
                     Screen.PERMISSION -> PermissionScreen(
                         btEnabled = ui.btEnabled,
+                        error = ui.error,
                         onRequest = { requestBluetooth() },
                         onEnableBluetooth = { requestEnableBluetooth() },
                         onBack = { vm.go(Screen.CONSENT) }
@@ -100,7 +113,29 @@ class MainActivity : ComponentActivity() {
 
     /** Ask the system to turn Bluetooth on (shows Android's own enable dialog). */
     private fun requestEnableBluetooth() {
-        enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+        // On Android 12+ (API 31) the ACTION_REQUEST_ENABLE intent REQUIRES the
+        // BLUETOOTH_CONNECT runtime permission. If we launch it without the permission
+        // the system throws a SecurityException and the app crashes. So if BT is off and
+        // we don't yet hold the permission, grab the permission first and resume the
+        // enable request from the permission callback.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+            != PackageManager.PERMISSION_GRANTED
+        ) {
+            pendingEnableAfterPermission = true
+            permLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
+            return
+        }
+        launchEnableBtIntent()
+    }
+
+    /** Launches the system "Turn on Bluetooth?" dialog, guarded against SecurityException. */
+    private fun launchEnableBtIntent() {
+        try {
+            enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+        } catch (e: SecurityException) {
+            vm.onEnableBluetoothFailed()
+        }
     }
 
     override fun onResume() {
