@@ -37,8 +37,9 @@ private val Dark = darkColorScheme(
 
 @Composable
 fun BeaconConsentTheme(content: @Composable () -> Unit) {
+    // Locked to the Light theme regardless of the device's dark-mode setting.
     MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) Dark else Light,
+        colorScheme = Light,
         content = content
     )
 }
