@@ -11,8 +11,8 @@ android {
         applicationId = "com.bajajfinance.beaconconsent"
         minSdk = 24          // Android 7.0 — covers ~99% of active Android devices
         targetSdk = 34       // Android 14
-        versionCode = 1
-        versionName = "1.0.6-poc"
+        versionCode = 2
+        versionName = "1.0.7-poc"
         vectorDrawables { useSupportLibrary = true }
 
         // ---- POC CONFIG: point this at your EasyReach / BFL registration endpoint ----

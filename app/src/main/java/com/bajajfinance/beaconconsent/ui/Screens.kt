@@ -79,9 +79,18 @@ private fun BulletRow(icon: ImageVector, tint: androidx.compose.ui.graphics.Colo
 
 @Composable
 fun WelcomeScreen(onStart: () -> Unit) {
-    Scaffold(topBar = { Header("Personalized Offers") }) { pad ->
+    Scaffold(
+        topBar = { Header("Personalized Offers") },
+        bottomBar = {
+            Surface(shadowElevation = 8.dp) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
+                    PrimaryButton("Get started", onClick = onStart)
+                }
+            }
+        }
+    ) { pad ->
         Column(
-            Modifier.padding(pad).fillMaxSize().padding(24.dp),
+            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(24.dp))
@@ -105,9 +114,7 @@ fun WelcomeScreen(onStart: () -> Unit) {
                     BulletRow(Icons.Outlined.Shield, BflBlue, "Device IDs stored only as a secure hash")
                 }
             }
-            Spacer(Modifier.weight(1f))
-            PrimaryButton("Get started", onClick = onStart)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -192,9 +199,24 @@ fun PermissionScreen(
     onEnableBluetooth: () -> Unit,
     onBack: () -> Unit
 ) {
-    Scaffold(topBar = { Header("Bluetooth permission") }) { pad ->
+    Scaffold(
+        topBar = { Header("Bluetooth permission") },
+        bottomBar = {
+            Surface(shadowElevation = 8.dp) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
+                    if (!btEnabled) {
+                        PrimaryButton("Turn on Bluetooth", onClick = onEnableBluetooth)
+                    } else {
+                        PrimaryButton("Allow Bluetooth access", onClick = onRequest)
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+                }
+            }
+        }
+    ) { pad ->
         Column(
-            Modifier.padding(pad).fillMaxSize().padding(24.dp),
+            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(32.dp))
@@ -212,8 +234,6 @@ fun PermissionScreen(
                     fontSize = 15.sp, textAlign = TextAlign.Center, lineHeight = 22.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 )
-                Spacer(Modifier.weight(1f))
-                PrimaryButton("Turn on Bluetooth", onClick = onEnableBluetooth)
             } else {
                 Icon(Icons.Filled.BluetoothSearching, null, tint = BflCyan,
                     modifier = Modifier.size(64.dp))
@@ -228,11 +248,8 @@ fun PermissionScreen(
                     fontSize = 15.sp, textAlign = TextAlign.Center, lineHeight = 22.sp,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
                 )
-                Spacer(Modifier.weight(1f))
-                PrimaryButton("Allow Bluetooth access", onClick = onRequest)
             }
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text("Back") }
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -338,9 +355,18 @@ private fun AssistCard(icon: ImageVector, text: String) {
 
 @Composable
 fun SuccessScreen(onHome: () -> Unit) {
-    Scaffold(topBar = { Header("You're all set") }) { pad ->
+    Scaffold(
+        topBar = { Header("You're all set") },
+        bottomBar = {
+            Surface(shadowElevation = 8.dp) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)) {
+                    PrimaryButton("Home", onClick = onHome)
+                }
+            }
+        }
+    ) { pad ->
         Column(
-            Modifier.padding(pad).fillMaxSize().padding(24.dp),
+            Modifier.padding(pad).fillMaxSize().verticalScroll(rememberScrollState()).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(48.dp))
@@ -353,9 +379,7 @@ fun SuccessScreen(onHome: () -> Unit) {
                 "outlet, our team can recognise you and share relevant offers.",
                 fontSize = 15.sp, textAlign = TextAlign.Center, lineHeight = 22.sp,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f))
-            Spacer(Modifier.weight(1f))
-            PrimaryButton("Home", onClick = onHome)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
